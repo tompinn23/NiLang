@@ -9,6 +9,7 @@ namespace Nilang.AST
     public enum ExprType
     {
         //Variable sheeeeeet
+        IdentifierExpr,
         VariableExpr,
         StringExpr,
         IntExpr,
@@ -24,7 +25,6 @@ namespace Nilang.AST
         FunctionExpr,
         CallExpr,
         PrototypeExpr,
-
-
+        LessThanExpr,
     }
 }

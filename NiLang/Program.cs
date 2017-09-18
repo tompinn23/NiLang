@@ -1,4 +1,6 @@
-﻿using Nilang.Lexer;
+﻿using LLVMSharp;
+using Nilang;
+using Nilang.Lex;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -17,16 +19,17 @@ namespace NiLang
             {
                 filename = args[0];
             }
+            LLVMModuleRef module = LLVM.ModuleCreateWithName(Path.GetFileNameWithoutExtension(filename));
+            LLVMBuilderRef builder = LLVM.CreateBuilder();
             string file = File.ReadAllText(filename);
             var lexer = new Lexer(file);
+            var parser = new Parser(lexer, new Visitor(module, builder));
             var token = lexer.NextToken();
-            var tokens = new List<Token> { token };
-            while(token.type != TokenType.EOF)
+            while (lexer.CurrentToken.type != TokenType.EOF)
             {
-                token = lexer.NextToken();
-                tokens.Add(token);
+                parser.ParsePrimary();
             }
-            foreach (var t in tokens) Console.Write(t.value);
+            LLVM.DumpModule(module);
             Console.Read();
         }
     }

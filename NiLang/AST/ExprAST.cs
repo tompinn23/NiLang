@@ -9,5 +9,7 @@ namespace Nilang.AST
     public abstract class ExprAST
     {
         public abstract ExprType NodeType { get; protected set; }
+
+        public abstract ExprAST Accept(Visitor visitor)
     }
 }

@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace Nilang.Lexer
+namespace Nilang.Lex
 {
     public class Lexer
     {
@@ -17,25 +18,71 @@ namespace Nilang.Lexer
         int line = 0;
         int column = 0;
 
+        public Token CurrentToken { get; private set; }
+
         public Lexer(string input)
         {
+            input = Regex.Replace(input, @"\r\n?|\n", "\n");
             this.input = input;
+            
+        }
+        public Token NextToken()
+        {
+            var token = nextToken();
+            while (token.type == TokenType.EmptySpace || token.type == TokenType.EOL || token.type == TokenType.Tab || token.type == TokenType.NewLine)
+                token = nextToken();
+            return CurrentToken = token;
         }
 
-
-        public Token NextToken()
+        private Token nextToken()
         {
             if (this.pos >= input.Length) return new Token(TokenType.EOF, "EOF", this.line, this.column);
             var chr = input[this.pos];
             var pos = this.pos;
             var line = this.line;
             var column = this.column;
+            var nextChar = ' ';
+            if(this.pos + 1 < input.Length) nextChar = input[pos + 1];
+            if (chr.ToString() + nextChar.ToString() == "//")
+            {
+                while (chr != '\n')
+                {
+                    this.pos += 1;
+                    chr = input[this.pos];
+                }
+                //this.pos += 1;
+                //chr = input[this.pos];
+            }
             if (chr == '"') return recognizeStringLiteral();
             else if (char.IsLetter(chr)) return recognizeIdentifier();
             else if (char.IsDigit(chr)) return recognizeNumber();
             else if (IsOperator(chr)) return recognizeOperator();
             else if (IsDelimeter(chr)) return recognizeDelimeter();
-
+            else if (chr == ' ')
+            {
+                this.pos += 1;
+                this.column += 1;
+                return new Token(TokenType.EmptySpace, " ", line, column);
+            }
+            else if (chr == '\n')
+            {
+                this.pos += 1;
+                this.line += 0;
+                this.column = 0;
+                return new Token(TokenType.NewLine, "\n", line, column);
+            }
+            else if (chr == '\t')
+            {
+                this.pos += 1;
+                this.column += 1;
+                return new Token(TokenType.Tab, "\t", line, column);
+            }
+            else if (chr == ',')
+            {
+                this.pos += 1;
+                this.column += 1;
+                return new Token(TokenType.ArgSeperator, ",", line, column);
+            }
             this.pos += 1;
             this.column += 1;
             return new Token(TokenType.Unkown, chr.ToString(), line, column);
@@ -187,20 +234,10 @@ namespace Nilang.Lexer
             var line = this.line;
             var column = this.column;
             var numInfo = new NumberFSM().Run(input.Substring(pos));
-            if(numInfo.Item1 == "int")
-            {
-                var number = input.Substring(pos,numInfo.Item2);
-                this.pos += numInfo.Item2;
-                this.column += numInfo.Item2;
-                return new Token(TokenType.Integer, number, line, column);
-            }
-            else
-            {
-                var number = input.Substring(pos, numInfo.Item2);
-                this.pos += numInfo.Item2;
-                this.column += numInfo.Item2;
-                return new Token(TokenType.Double, number, line, column);
-            }
+            var number = input.Substring(pos,numInfo);
+            this.pos += numInfo;
+            this.column += numInfo;
+            return new Token(TokenType.Number, number, line, column);
                 
         }
 
@@ -241,7 +278,7 @@ namespace Nilang.Lexer
                 NoNextState = -1,
             }
 
-            public Tuple<string, int> Run(string input)
+            public int Run(string input)
             {
                 var currState = InitialState;
                 var prevState = InitialState;
@@ -253,24 +290,10 @@ namespace Nilang.Lexer
                     currState = nextState(currState, character);
                     if (currState == State.NoNextState)
                     {
-                        if(prevState == State.Integer || prevState == State.NumberWithExponent)
-                        {
-                            return new Tuple<string, int>("int", i);
-                        }
-                        else
-                        {
-                            return new Tuple<string, int>("double", i);
-                        }
+                        return i;
                     }
                 }
-                if (prevState == State.Integer || prevState == State.NumberWithExponent)
-                {
-                    return new Tuple<string, int>("int", i);
-                }
-                else
-                {
-                    return new Tuple<string, int>("double", i);
-                }
+                return i;
             }
 
             private State nextState(State currState,char chr)

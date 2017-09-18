@@ -6,21 +6,21 @@ using System.Threading.Tasks;
 
 namespace Nilang.AST.VariableTypes
 {
-    public sealed class StringExprAST : VariableExprAST
+    class BoolExprAST : VariableExprAST
     {
-        public string Value { get; private set; }
         public override string Name { get; protected set; }
+        public bool Value { get; private set; }
         public override ExprType NodeType { get; protected set; }
-
-        public StringExprAST(string name, string value)
+        
+        public BoolExprAST(string name, bool value)
         {
             this.Name = name;
             this.Value = value;
-            this.NodeType = ExprType.StringExpr;
         }
-        public StringExprAST Accept(Visitor visitor)
+
+        public BoolExprAST Accept(Visitor visitor)
         {
-            return visitor.StringVisit(this);
+            return visitor.BoolASTVisit(this);
         }
     }
 }

@@ -10,7 +10,5 @@ namespace Nilang.AST
     {
         public abstract string Name { get; protected set; }
 
-
-
     }
 }

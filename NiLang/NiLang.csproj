@@ -102,13 +102,24 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AST\BinaryOpExprAST.cs" />
+    <Compile Include="AST\BlockExprAST.cs" />
+    <Compile Include="AST\CallExprAST.cs" />
     <Compile Include="AST\ExprAST.cs" />
     <Compile Include="AST\ExprType.cs" />
+    <Compile Include="AST\FunctionAST.cs" />
+    <Compile Include="AST\PrototypeAST.cs" />
+    <Compile Include="AST\VariableTypes\BoolExprAST.cs" />
+    <Compile Include="AST\VariableTypes\IdentifierExprAST.cs" />
     <Compile Include="AST\VariableTypes\StringExprAST.cs" />
     <Compile Include="AST\VariableTypes\VariableExprAST.cs" />
     <Compile Include="AST\VariableTypes\IntegerExprAST.cs" />
+    <Compile Include="Visitor\CodeGenListener.cs" />
+    <Compile Include="Visitor\Visitor.cs" />
     <Compile Include="Lexer\Lexer.cs" />
     <Compile Include="Lexer\Token.cs" />
+    <Compile Include="ArgTypePair.cs" />
+    <Compile Include="Parser\Parser.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
