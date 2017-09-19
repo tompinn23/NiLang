@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace Nilang.AST.VariableTypes
 {
-    public sealed class IdentifierExprAST : VariableExprAST
+    public sealed class IdentifierExprAST : ExprAST
     {
-        public override string Name { get; protected set; }
+        public string Name { get; private set; }
         public override ExprType NodeType { get; protected set; }
         public IdentifierExprAST(string name)
         {

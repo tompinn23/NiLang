@@ -11,7 +11,7 @@ namespace Nilang
     {
         private static readonly LLVMBool LLVMBoolFalse = new LLVMBool(0);
     
-        private static readonly LLVMValueRef NullValue = new LLVMValueRef(IntPtr.Zero);
+        private static readonly LLVMValueRef NullValue = new LLVMValueRef(IntPtr.Zero);     
 
         private static Visitor instance; 
 
@@ -22,17 +22,24 @@ namespace Nilang
         private readonly LLVMModuleRef module;
 
         private readonly LLVMBuilderRef builder;
+        private LLVMValueRef mainFunction;
 
+        private LLVMValueRef entryBlock;
+        private LLVMPassManagerRef FPM;
         private Stack<LLVMValueRef> valueStack = new Stack<LLVMValueRef>();
 
         private Stack<LLVMValueRef> blockStack = new Stack<LLVMValueRef>(); 
 
         private Dictionary<string, LLVMValueRef> namedValues = new Dictionary<string, LLVMValueRef>();
 
-        public Visitor(LLVMModuleRef module, LLVMBuilderRef builder)
+
+        public Visitor(LLVMModuleRef module, LLVMBuilderRef builder, LLVMValueRef mainFunction, LLVMValueRef entryBlock, LLVMPassManagerRef FPM)
         {
             this.module = module;
             this.builder = builder;
+            this.mainFunction = mainFunction;
+            this.entryBlock = entryBlock;
+            this.FPM = FPM;
             instance = this;
         }
 
@@ -43,13 +50,44 @@ namespace Nilang
             return null;
         }
 
+        public static LLVMValueRef CreateEntryBlockAlloca(LLVMValueRef Function, LLVMTypeRef type, string name)
+        {
+            var build = new IRBuilder();
+            build.PositionBuilder(Function.GetEntryBasicBlock(), Function.GetEntryBasicBlock().GetFirstInstruction());
+            return build.CreateAlloca(type, name);
+        }
+
         internal BoolExprAST BoolASTVisit(BoolExprAST node)
         {
             valueStack.Push(LLVM.ConstInt(LLVM.Int8Type(), Convert.ToUInt64(node.Value), new LLVMBool(0)));
             return node;
         }
 
-        public IntegerExprAST IntegerASTVisit(IntegerExprAST node)
+        internal ExprAST DoubleASTVisit(DoubleAST doubleAST)
+        {
+            throw new NotImplementedException();
+        }
+
+        public ExprAST VariableExprVisit(VariableExprAST node)
+        {
+            LLVMValueRef initValue;
+            this.Visit(node.Value);
+            initValue = valueStack.Pop();
+            LLVMValueRef alloca = default(LLVMValueRef);
+            switch (LLVM.GetTypeKind(LLVM.TypeOf(initValue)))
+            {
+                case LLVMTypeKind.LLVMIntegerTypeKind:
+                    alloca = CreateEntryBlockAlloca(mainFunction, LLVMTypeRef.Int64Type(), node.Name);
+                    break;
+                case LLVMTypeKind.LLVMDoubleTypeKind:
+                    alloca = CreateEntryBlockAlloca(mainFunction, LLVMTypeRef.DoubleType(), node.Name);
+                    break;
+            }
+            LLVM.BuildStore(builder, initValue, alloca);
+            return node;
+        }
+
+        public IntegerAST IntegerASTVisit(IntegerAST node)
         {
             valueStack.Push(LLVM.ConstInt(LLVM.Int64Type(), (ulong)node.Value, new LLVMBool(1)));
             return node;
@@ -70,22 +108,32 @@ namespace Nilang
             Visit(node.Rhs);
             LLVMValueRef r = valueStack.Pop();
             LLVMValueRef l = valueStack.Pop();
+            r = LLVM.BuildLoad(builder, r, "r");
+            l = LLVM.BuildLoad(builder, l, "l");
             LLVMValueRef n;
+            var i = false;
+            if (LLVM.GetTypeKind(LLVM.TypeOf(r)) == LLVMTypeKind.LLVMIntegerTypeKind || LLVM.GetTypeKind(LLVM.TypeOf(r)) == LLVMTypeKind.LLVMIntegerTypeKind)
+               i = true;
             switch (node.NodeType)
             {
                 case ExprType.AddExpr:
-                    n = LLVM.BuildFAdd(builder, l, r, "addtmp");
+                    if(i) n = LLVM.BuildAdd(builder, l, r, "addtmp");
+                    else n = LLVM.BuildFAdd(builder, l, r, "addtmp");
                     break;
                 case ExprType.SubtractExpr:
-                    n = LLVM.BuildFSub(builder, l, r, "subtmp");
+                    if(i) n = LLVM.BuildSub(builder, l, r, "subtmp");
+                    else n = LLVM.BuildFSub(builder, l, r, "subtmp");
                     break;
                 case ExprType.MultExpr:
-                    n = LLVM.BuildFMul(builder, l, r, "subtmp");
+                    if(i) n = LLVM.BuildMul(builder, l, r, "subtmp");
+                    else n = LLVM.BuildFMul(builder, l, r, "subtmp");
                     break;
                 case ExprType.DivideExpr:
-                    n = LLVM.BuildFDiv(builder, l, r, "subtmp");
+                    if(i) n = LLVM.BuildFDiv(builder, l, r, "subtmp");
+                    else n = LLVM.BuildFDiv(builder, l, r, "subtmp");
                     break;
                 case ExprType.LessThanExpr:
+                    if(i) n = LLVM.BuildICmp(this.builder, LLVMIntPredicate.LLVMIntULT, l, r, "cmptmp");
                     n = LLVM.BuildFCmp(this.builder, LLVMRealPredicate.LLVMRealULT, l, r, "cmptmp");
                     break;
                 default:
@@ -106,7 +154,7 @@ namespace Nilang
             return node;
         }
 
-        public StringExprAST StringVisit(StringExprAST node)
+        public StringAST StringVisit(StringAST node)
         {
             throw new NotImplementedException();
         }
@@ -137,7 +185,7 @@ namespace Nilang
             this.namedValues.Clear();
             this.Visit(node.Proto);
             LLVMValueRef function = valueStack.Pop();
-            LLVM.PositionBuilderAtEnd(this.builder, LLVM.AppendBasicBlock(function, "entry"));
+
 
             try
             {
@@ -158,7 +206,7 @@ namespace Nilang
                 LLVM.BuildRet(builder, blockStack.Pop());
             }
             LLVM.VerifyFunction(function, LLVMVerifierFailureAction.LLVMPrintMessageAction);
-
+            LLVM.RunFunctionPassManager(FPM, function);
             this.valueStack.Push(function);
 
             return node;
@@ -223,13 +271,17 @@ namespace Nilang
                 }
                 function = LLVM.AddFunction(module, node.Name, LLVM.FunctionType(ret, arguments, LLVMBoolFalse));
                 LLVM.SetLinkage(function, LLVMLinkage.LLVMExternalLinkage);
+                var funcEntry = LLVM.AppendBasicBlock(function, "entry");
+                LLVM.PositionBuilderAtEnd(this.builder, funcEntry);
 
-                for(int i =0; i < argumentCount; i++)
+                for (int i =0; i < argumentCount; i++)
                 {
                     string argumentName = node.Args[i].Name;
                     LLVMValueRef param = LLVM.GetParam(function, (uint)i);
                     LLVM.SetValueName(param, argumentName);
-                    this.namedValues[argumentName] = param;
+                    LLVMValueRef Alloca = CreateEntryBlockAlloca(function, arguments[i], argumentName);
+                    LLVM.BuildStore(builder, param, Alloca);
+                    this.namedValues[argumentName] = Alloca;
                 }
                 this.valueStack.Push(function);
                 return node;

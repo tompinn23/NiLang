@@ -15,17 +15,28 @@ namespace Nilang
 
         private Lexer lexer;
         private Visitor visitor;
+
+        private bool dontVisit = false;
+
         static Dictionary<char, int> BinopPrecedence = new Dictionary<char, int>();
         public Parser(Lexer lexer, Visitor visitor)
         {
             this.lexer = lexer;
             this.visitor = visitor;
+            BinopPrecedence['='] = 2;
             BinopPrecedence['<'] = 10;
             BinopPrecedence['>'] = 10;
             BinopPrecedence['+'] = 20;
             BinopPrecedence['-'] = 20;
             BinopPrecedence['*'] = 30;
             BinopPrecedence['/'] = 30;
+        }
+
+        public ExprAST Visit(ExprAST node)
+        {
+            if(!dontVisit)
+                return visitor.Visit(node);
+            return node;
         }
 
         private int GetOpPrecedence()
@@ -51,17 +62,22 @@ namespace Nilang
                     return LogError("unknown token when expecting an expression");
                 case TokenType.Type:
                     return ParseDeclarationExpr();
-                case TokenType.Integer:
-                    return ParseIntegerExpr();
                 case TokenType.Identifier:
                     return ParseIdentifierExpr();
                 case TokenType.LeftParenthesis:
                     return ParseParenExpr();
                 case TokenType.Keyword:
                     return ParseKeyword();
+                case TokenType.Number:
+                    return ParseNumber();
                 case TokenType.EOF:
                     return null;
             }
+        }
+
+        private ExprAST ParseNumber()
+        {
+            throw new NotImplementedException();
         }
 
         private ExprAST ParseKeyword()
@@ -82,7 +98,7 @@ namespace Nilang
                 return LogError("Expression failed");
 
             var func = new FunctionAST(new PrototypeAST(Type.Void, "", new List<ArgTypePair>()), e);
-            visitor.Visit(func);
+            Visit(func);
             return func;
         }
 
@@ -95,13 +111,40 @@ namespace Nilang
             if(TypeHelper.ConvertStringToType(curTok.value) == Type.Integer)
             {
                 var a = ParseIntegerExpr();
-                visitor.Visit(a);
+                Visit(a);
+                return a;
+            }
+            else if(TypeHelper.ConvertStringToType(curTok.value) == Type.Double)
+            {
+                var a = ParseDoubleExpr();
+                Visit(a);
                 return a;
             }
             else
             {
                 return null;
             }
+        }
+
+        private ExprAST ParseDoubleExpr()
+        {
+            var name = lexer.CurrentToken.value;
+            lexer.NextToken();
+            ExprAST init;
+            lexer.NextToken();
+            init = ParseDouble();
+            if (init == null)
+                return null;
+            return new VariableExprAST(name, (DoubleAST)init);
+        }
+
+        private ExprAST ParseDouble()
+        {
+            if (lexer.CurrentToken.type != TokenType.Number)
+            {
+                return LogError("Expected a double");
+            }
+            return new DoubleAST(double.Parse(lexer.CurrentToken.value));
         }
 
         public ExprAST LogError(string error)
@@ -112,10 +155,36 @@ namespace Nilang
         public ExprAST ParseIntegerExpr()
         {
             var name = lexer.CurrentToken.value;
-            while (lexer.CurrentToken.type != TokenType.Number) lexer.NextToken();
-            var Result = new IntegerExprAST(name, Int64.Parse(lexer.CurrentToken.value));
             lexer.NextToken();
-            return Result;
+            ExprAST init;
+            lexer.NextToken();
+            init = ParseInteger();
+            if (init == null)
+                return null;
+            return new VariableExprAST(name, (IntegerAST)init);
+        }
+
+        private ExprAST ParseInteger()
+        {
+            if (lexer.CurrentToken.type != TokenType.Number)
+            {
+                return LogError("Expected an integer");
+            }
+            var num = ForceConvertToInt(lexer.CurrentToken.value);
+            lexer.NextToken();
+            return new IntegerAST(num);
+        }
+
+        private long ForceConvertToInt(string num)
+        {
+            long a;
+            double b;
+            if (Int64.TryParse(num, out a))
+                return (long)a;
+            if (double.TryParse(num, out b))
+                return (long)b;
+            else
+                return 0;
         }
 
         public ExprAST ParseParenExpr()
@@ -135,7 +204,7 @@ namespace Nilang
             lexer.NextToken();
             //Simple Identifier e.g int b = c;
             if (lexer.CurrentToken.type != TokenType.LeftParenthesis)
-                return visitor.Visit(new IdentifierExprAST(idName));
+                return Visit(new IdentifierExprAST(idName));
             lexer.NextToken();
             List<ExprAST> Args = new List<ExprAST>();
             if (lexer.CurrentToken.type != TokenType.RightParenthesis)
@@ -156,7 +225,7 @@ namespace Nilang
                 }
             }
             lexer.NextToken();
-            return visitor.Visit(new CallExprAST(idName, Args));
+            return Visit(new CallExprAST(idName, Args));
 
         }
 
@@ -193,12 +262,14 @@ namespace Nilang
 
         public ExprAST ParseFunctionDef()
         {
+            dontVisit = true;
             lexer.NextToken();
             var proto = ParsePrototype();
             var block = ParseBlock();
             if (block == null)
                 return LogError("Function Definition Failed");
-            return visitor.Visit(new FunctionAST(proto, block));
+            dontVisit = false;
+            return Visit(new FunctionAST(proto, block));
 
         }
 
@@ -209,9 +280,9 @@ namespace Nilang
             ///Consume '{'
             lexer.NextToken();
             List<ExprAST> exprs = new List<ExprAST>();
-            while(lexer.NextToken().type != TokenType.RightCurlyBrace)
+            while(lexer.CurrentToken.type != TokenType.RightCurlyBrace)
             {
-               var line = ParsePrimary();
+                var line = ParseExpression();
                if (line == null)
                     return LogError("Failed to parse block");
                 exprs.Add(line);

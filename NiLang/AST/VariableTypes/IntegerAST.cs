@@ -6,14 +6,13 @@ using System.Threading.Tasks;
 
 namespace Nilang.AST.VariableTypes
 {
-    public sealed class IntegerExprAST : VariableExprAST
+    public sealed class IntegerAST : ExprAST
     {
-        public override string Name { get; protected set; }
         public override ExprType NodeType { get; protected set; }
         public long Value { get; private set; }
-        public IntegerExprAST(string name, long value)
+
+        public IntegerAST(long value)
         {
-            Name = name;
             Value = value;
             NodeType = ExprType.IntExpr;
         }

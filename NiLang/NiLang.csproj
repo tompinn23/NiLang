@@ -110,10 +110,11 @@
     <Compile Include="AST\FunctionAST.cs" />
     <Compile Include="AST\PrototypeAST.cs" />
     <Compile Include="AST\VariableTypes\BoolExprAST.cs" />
+    <Compile Include="AST\VariableTypes\DoubleAST.cs" />
     <Compile Include="AST\VariableTypes\IdentifierExprAST.cs" />
-    <Compile Include="AST\VariableTypes\StringExprAST.cs" />
+    <Compile Include="AST\VariableTypes\StringAST.cs" />
     <Compile Include="AST\VariableTypes\VariableExprAST.cs" />
-    <Compile Include="AST\VariableTypes\IntegerExprAST.cs" />
+    <Compile Include="AST\VariableTypes\IntegerAST.cs" />
     <Compile Include="Visitor\CodeGenListener.cs" />
     <Compile Include="Visitor\Visitor.cs" />
     <Compile Include="Lexer\Lexer.cs" />
