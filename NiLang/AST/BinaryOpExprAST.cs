@@ -37,7 +37,7 @@ namespace Nilang.AST
             this.Lhs = lhs;
             this.Rhs = rhs;
         }
-        public BinaryOpExprAST Accept(Visitor visitor)
+        public override ExprAST Accept(Visitor visitor)
         {
             return visitor.BinaryOpASTVisit(this);
         }

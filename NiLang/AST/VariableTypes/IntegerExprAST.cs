@@ -17,7 +17,7 @@ namespace Nilang.AST.VariableTypes
             Value = value;
             NodeType = ExprType.IntExpr;
         }
-        public IntegerExprAST Accept(Visitor visitor)
+        public override ExprAST Accept(Visitor visitor)
         {
             return visitor.IntegerASTVisit(this);
         }

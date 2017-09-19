@@ -17,7 +17,7 @@ namespace Nilang.AST
             this.Args = args;
             this.NodeType = ExprType.CallExpr;
         }
-        public CallExprAST Accept(Visitor visitor)
+        public override ExprAST Accept(Visitor visitor)
         {
             return visitor.CallASTVisit(this);
         }

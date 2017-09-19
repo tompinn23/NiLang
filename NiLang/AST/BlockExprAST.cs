@@ -15,7 +15,7 @@ namespace Nilang.AST
         {
             Exprs = exprs;
         }
-        public BlockExprAST Accept(Visitor visitor)
+        public override ExprAST Accept(Visitor visitor)
         {
             return visitor.BlockASTVisit(this);
         }

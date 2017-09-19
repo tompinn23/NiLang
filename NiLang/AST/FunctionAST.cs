@@ -18,7 +18,7 @@ namespace Nilang.AST
             this.NodeType = ExprType.FunctionExpr;
         }
 
-        public FunctionAST Accept(Visitor visitor)
+        public override ExprAST Accept(Visitor visitor)
         {
             return visitor.FunctionASTVisit(this);
         }

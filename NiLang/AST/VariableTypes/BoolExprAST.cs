@@ -18,7 +18,7 @@ namespace Nilang.AST.VariableTypes
             this.Value = value;
         }
 
-        public BoolExprAST Accept(Visitor visitor)
+        public override ExprAST Accept(Visitor visitor)
         {
             return visitor.BoolASTVisit(this);
         }

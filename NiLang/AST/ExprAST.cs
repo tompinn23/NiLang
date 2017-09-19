@@ -10,6 +10,6 @@ namespace Nilang.AST
     {
         public abstract ExprType NodeType { get; protected set; }
 
-        public abstract ExprAST Accept(Visitor visitor)
+        public abstract ExprAST Accept(Visitor visitor);
     }
 }

@@ -20,7 +20,7 @@ namespace Nilang.AST
             this.Args = args;
             this.NodeType = ExprType.PrototypeExpr;
         }
-        public PrototypeAST Accept(Visitor visitor)
+        public override ExprAST Accept(Visitor visitor)
         {
             return visitor.PrototypeASTVisit(this);
         }

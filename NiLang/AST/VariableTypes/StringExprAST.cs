@@ -18,7 +18,7 @@ namespace Nilang.AST.VariableTypes
             this.Value = value;
             this.NodeType = ExprType.StringExpr;
         }
-        public StringExprAST Accept(Visitor visitor)
+        public override ExprAST Accept(Visitor visitor)
         {
             return visitor.StringVisit(this);
         }
