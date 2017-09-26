@@ -3,8 +3,10 @@ using Nilang;
 using Nilang.Lex;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -17,7 +19,7 @@ namespace NiLang
         static void Main(string[] args)
         {
             string filename = @"test.ni";
-            string outname = Path.GetFileNameWithoutExtension(filename) + ".o";
+            string outname = Path.GetFileNameWithoutExtension(filename) + ".bc";
             if(args.Length == 1)
             {
                 filename = args[0];
@@ -33,35 +35,11 @@ namespace NiLang
             LLVM.AddCFGSimplificationPass(FPM);
             LLVM.FinalizeFunctionPassManager(FPM);
 
-            var targetTriple = LLVM.GetDefaultTargetTriple();
-
-            //LLVM.InitializeAllTargetInfos();
-            //LLVM.InitializeAllTargets();
-            //LLVM.InitializeAllTargetMCs();
-            //LLVM.InitializeAllAsmParsers();
-            //LLVM.InitializeAllAsmPrinters();
-            //LLVMTargetRef target;
-            //string error;
-            //LLVM.GetTargetFromTriple(targetTriple.ToString(), out target, out error);
-            //if (error.Length > 0)
-            //    throw new Exception(error);
-            //var cpu = "generic";
-            //var feature = "";
-            //var machine = LLVM.CreateTargetMachine(target, targetTriple.ToString(), cpu, feature, LLVMCodeGenOptLevel.LLVMCodeGenLevelDefault, LLVMRelocMode.LLVMRelocDefault, LLVMCodeModel.LLVMCodeModelDefault);
-            
-
-            //LLVM.SetDataLayout(module, LLVM.CopyStringRepOfTargetData(LLVM.CreateTargetDataLayout(machine)).ToString());
-            //LLVM.SetTarget(module, targetTriple.ToString());
-
-
             string file = File.ReadAllText(filename);
             var lexer = new Lexer(file);
             var main = createMain();
             var block = LLVM.AppendBasicBlock(main, "entry");
             LLVM.PositionBuilder(builder, block, block.GetFirstInstruction());
-
-            declareCFunctions();
-
             var parser = new Parser(lexer, new Visitor(module, builder, main, block, FPM));
             var token = lexer.NextToken();
             LLVM.DumpModule(module);
@@ -72,7 +50,16 @@ namespace NiLang
                 Console.WriteLine("\n##################################################################################################################\n");
                 LLVM.DumpModule(module);
             }
+            LLVM.PositionBuilderAtEnd(builder, block);
+            LLVM.BuildRet(builder, LLVM.ConstInt(LLVM.Int64Type(), 0, new LLVMBool(0)));
+            string error = "";
 
+            Console.WriteLine("\n##################################################################################################################\n");
+            LLVM.DumpModule(module);
+            LLVM.VerifyModule(module, LLVMVerifierFailureAction.LLVMPrintMessageAction, out error);
+            LLVM.WriteBitcodeToFile(module, outname);
+            var clang = Process.Start("clang++", "test.bc -o test.exe");
+            clang.WaitForExit();
             Console.Read();
         }
 

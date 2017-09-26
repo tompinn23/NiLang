@@ -21,6 +21,7 @@ namespace Nilang
     public enum Type
     {
         Integer,
+        Int32,
         String,
         Double,
         Function,
@@ -37,6 +38,8 @@ namespace Nilang
             {
                 case "int":
                     return Type.Integer;
+                case "int32":
+                    return Type.Int32;
                 case "string":
                     return Type.String;
                 case "double":

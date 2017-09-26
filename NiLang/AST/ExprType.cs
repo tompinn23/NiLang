@@ -26,5 +26,6 @@ namespace Nilang.AST
         CallExpr,
         PrototypeExpr,
         LessThanExpr,
+        ExternExpr,
     }
 }

@@ -86,9 +86,52 @@ namespace Nilang
             {
                 case "def":
                     return ParseFunctionDef();
-                    break;
+                case "extern":
+                    return ParseExtern();
             }
             return null;
+        }
+
+        private ExprAST ParseExtern()
+        {
+            lexer.NextToken();
+            if (lexer.CurrentToken.type != TokenType.Type)
+                return LogError("Expected return type in function definition");
+            var type = TypeHelper.ConvertStringToType(lexer.CurrentToken.value);
+            lexer.NextToken();
+
+            if (lexer.CurrentToken.type != TokenType.Identifier)
+                return LogError("Expected function name in prototype");
+
+            string FnName = lexer.CurrentToken.value;
+            lexer.NextToken();
+            if (lexer.CurrentToken.type != TokenType.LeftParenthesis)
+                return LogError("Expected '(' in function prototype");
+
+            List<ArgTypePair> Args = new List<ArgTypePair>();
+            while (lexer.NextToken().type != TokenType.RightParenthesis)
+            {
+                if (lexer.CurrentToken.type != TokenType.Type)
+                    return LogError("Expected a type for function parameter");
+                var argType = TypeHelper.ConvertStringToType(lexer.CurrentToken.value);
+                ///Consume type token
+                lexer.NextToken();
+                if (lexer.CurrentToken.type != TokenType.Identifier)
+                    return LogError("Expected an parameter name.");
+                var name = lexer.CurrentToken.value;
+                Args.Add(new ArgTypePair(argType, name));
+                //Consume the , or )
+                lexer.NextToken();
+                if (lexer.CurrentToken.type == TokenType.RightParenthesis)
+                    break;
+                if (lexer.CurrentToken.type != TokenType.ArgSeperator)
+                    return LogError("Expected a ',' to separate the args.");
+            }
+            if (lexer.CurrentToken.type != TokenType.RightParenthesis)
+                LogError("Expected a ')' ");
+            //Consume ')'
+            lexer.NextToken();
+            return Visit(new ExternAST(FnName, type, Args));
         }
 
         public ExprAST ParseTopLevelExpr()
@@ -120,10 +163,31 @@ namespace Nilang
                 Visit(a);
                 return a;
             }
+            else if(TypeHelper.ConvertStringToType(curTok.value) == Type.Bool)
+            {
+                return Visit(ParseBoolExpr());
+            }
             else
             {
                 return null;
             }
+        }
+
+        private ExprAST ParseBoolExpr()
+        {
+            var name = lexer.CurrentToken.value;
+            lexer.NextToken();
+            ExprAST init;
+            lexer.NextToken();
+            init = ParseBool();
+            if (init == null)
+                return null;
+            return new VariableExprAST(name, (BoolAST)init);
+        }
+
+        private ExprAST ParseBool()
+        {
+            throw new NotImplementedException();
         }
 
         private ExprAST ParseDoubleExpr()

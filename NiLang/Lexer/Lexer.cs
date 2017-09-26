@@ -9,9 +9,9 @@ namespace Nilang.Lex
 {
     public class Lexer
     {
-        public static string[] keywords = new string[] { "def", "return", "class", "if", "else", "elif", "switch", "case", "this", "override", "extends", "implements", "interface", "default", "break", "continue" };
+        public static string[] keywords = new string[] { "def", "return", "class", "if", "else", "elif", "switch", "case", "this", "override", "extends", "implements", "interface", "default", "break", "continue", "import" };
         public static string[] access = new string[] { "private", "public" };
-        public static string[] types = new string[] { "void", "int", "double", "string", "float", "var", "bool" };
+        public static string[] types = new string[] { "void", "int", "double", "string", "float", "var", "bool", "char" };
 
         string input;
         int pos = 0;

@@ -107,9 +107,10 @@
     <Compile Include="AST\CallExprAST.cs" />
     <Compile Include="AST\ExprAST.cs" />
     <Compile Include="AST\ExprType.cs" />
+    <Compile Include="AST\ExternAST.cs" />
     <Compile Include="AST\FunctionAST.cs" />
     <Compile Include="AST\PrototypeAST.cs" />
-    <Compile Include="AST\VariableTypes\BoolExprAST.cs" />
+    <Compile Include="AST\VariableTypes\BoolAST.cs" />
     <Compile Include="AST\VariableTypes\DoubleAST.cs" />
     <Compile Include="AST\VariableTypes\IdentifierExprAST.cs" />
     <Compile Include="AST\VariableTypes\StringAST.cs" />

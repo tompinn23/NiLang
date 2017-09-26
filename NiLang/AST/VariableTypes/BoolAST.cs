@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 namespace Nilang.AST.VariableTypes
 {
-    class BoolExprAST : ExprAST
+    public sealed class BoolAST : ExprAST
     { 
         public bool Value { get; private set; }
         public override ExprType NodeType { get; protected set; }
         
-        public BoolExprAST(string name, bool value)
+        public BoolAST(string name, bool value)
         {
             this.Value = value;
         }

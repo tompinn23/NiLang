@@ -17,6 +17,8 @@ namespace Nilang
 
         public static Visitor visitor { get { return instance; } }
 
+
+
         public Stack<LLVMValueRef> ResultStack { get => valueStack; }
 
         private readonly LLVMModuleRef module;
@@ -31,6 +33,8 @@ namespace Nilang
         private Stack<LLVMValueRef> blockStack = new Stack<LLVMValueRef>(); 
 
         private Dictionary<string, LLVMValueRef> namedValues = new Dictionary<string, LLVMValueRef>();
+
+        private Dictionary<string, Dictionary<string, LLVMValueRef>> contexts = new Dictionary<string, Dictionary<string, LLVMValueRef>>();
 
 
         public Visitor(LLVMModuleRef module, LLVMBuilderRef builder, LLVMValueRef mainFunction, LLVMValueRef entryBlock, LLVMPassManagerRef FPM)
@@ -57,7 +61,7 @@ namespace Nilang
             return build.CreateAlloca(type, name);
         }
 
-        internal BoolExprAST BoolASTVisit(BoolExprAST node)
+        internal BoolAST BoolASTVisit(BoolAST node)
         {
             valueStack.Push(LLVM.ConstInt(LLVM.Int8Type(), Convert.ToUInt64(node.Value), new LLVMBool(0)));
             return node;
@@ -91,6 +95,11 @@ namespace Nilang
         {
             valueStack.Push(LLVM.ConstInt(LLVM.Int64Type(), (ulong)node.Value, new LLVMBool(1)));
             return node;
+        }
+
+        public ExprAST ExternASTVisit(ExternAST externAST)
+        {
+            throw new NotImplementedException();
         }
 
         public IdentifierExprAST IdentifierASTVisit(IdentifierExprAST node)

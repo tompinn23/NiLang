@@ -19,6 +19,8 @@ namespace Nilang.AST
                         return (DoubleAST)v;
                     case Type.Integer:
                         return (IntegerAST)v;
+                    case Type.Bool:
+                        return (BoolAST)v;
                     default:
                         return v;
                 }
@@ -39,6 +41,13 @@ namespace Nilang.AST
             this.Name = name;
             this.Value = v;
             this.type = Type.Integer;
+        }
+
+        public VariableExprAST(string name, BoolAST v)
+        {
+            this.Name = name;
+            this.Value = v;
+            this.type = Type.Bool;
         }
 
 
