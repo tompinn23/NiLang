@@ -48,7 +48,6 @@ namespace Nilang
             if(!BinopPrecedence.TryGetValue(c, out prec))
                 return -1;
             return prec;
-           
         }
 
         public ExprAST ParsePrimary()
@@ -69,7 +68,8 @@ namespace Nilang
                 case TokenType.Keyword:
                     return ParseKeyword();
                 case TokenType.Number:
-                    return ParseNumber();
+                    var b = ParseNumber();
+                    return b;
                 case TokenType.EOF:
                     return null;
             }
@@ -77,7 +77,15 @@ namespace Nilang
 
         private ExprAST ParseNumber()
         {
-            throw new NotImplementedException();
+            var number = lexer.CurrentToken.value;
+            if(number.Contains('.'))
+            {
+                return Visit(ParseDouble());
+            }
+            else
+            {
+                return Visit(ParseInteger());
+            }
         }
 
         private ExprAST ParseKeyword()
@@ -88,7 +96,15 @@ namespace Nilang
                     return ParseFunctionDef();
                 case "extern":
                     return ParseExtern();
+                case "return":
+                    return ParseReturn();
             }
+            return null;
+        }
+
+        private ExprAST ParseReturn()
+        {
+            lexer.NextToken(); //Consume the return
             return null;
         }
 

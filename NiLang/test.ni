@@ -1,6 +1,7 @@
-int a = 10;
 
-def void integers(int x, int b)
+
+def main()
 {
-	x + b;
+	putchar(33);
+	printLn("Haha");
 }

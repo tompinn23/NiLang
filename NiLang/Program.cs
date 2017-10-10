@@ -37,10 +37,7 @@ namespace NiLang
 
             string file = File.ReadAllText(filename);
             var lexer = new Lexer(file);
-            var main = createMain();
-            var block = LLVM.AppendBasicBlock(main, "entry");
-            LLVM.PositionBuilder(builder, block, block.GetFirstInstruction());
-            var parser = new Parser(lexer, new Visitor(module, builder, main, block, FPM));
+            var parser = new Parser(lexer, new Visitor(module, builder, FPM));
             var token = lexer.NextToken();
             LLVM.DumpModule(module);
 
@@ -50,8 +47,7 @@ namespace NiLang
                 Console.WriteLine("\n##################################################################################################################\n");
                 LLVM.DumpModule(module);
             }
-            LLVM.PositionBuilderAtEnd(builder, block);
-            LLVM.BuildRet(builder, LLVM.ConstInt(LLVM.Int64Type(), 0, new LLVMBool(0)));
+
             string error = "";
 
             Console.WriteLine("\n##################################################################################################################\n");
