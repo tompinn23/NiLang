@@ -28,7 +28,7 @@ namespace Nilang
                     LLVM.BuildRet(this.builder, LLVM.ConstInt(LLVM.Int8Type(), Convert.ToUInt64(bool.Parse(node.value)), new LLVMBool(0)));
                     break;
                 case Type.String:
-                    //TODO: Implement Strings as a return value. +feature
+                    //TODO: Implement Strings as a return value. +feature id:1 gh:3
                     throw new NotImplementedException();
                 case Type.Void:
                     LLVM.BuildRetVoid(this.builder);
@@ -36,7 +36,7 @@ namespace Nilang
             }
             return node
         }
-        // TODO: Decide on Externals? +feature
+        // TODO: Decide on Externals? +feature id:2 gh:4
         public ExprAST ExternASTVisit(ExternAST externAST)
         {
             throw new NotImplementedException();
