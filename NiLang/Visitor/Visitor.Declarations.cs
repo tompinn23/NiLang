@@ -28,7 +28,7 @@ namespace Nilang
             valueStack.Push(LLVM.ConstInt(LLVM.Int64Type(), (ulong)node.Value, new LLVMBool(1)));
             return node;
         }
-        //TODO: Implement Strings +feature
+        //TODO: Implement Strings +feature id:0 gh:2
         public StringAST StringVisit(StringAST node)
         {
             throw new NotImplementedException();
